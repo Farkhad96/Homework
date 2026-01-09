@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Electronics",
+    "description": "Electronic devices and accessories",
+    "products": [
+      {
+        "name": "Laptop",
+        "description": "High-performance laptop",
+        "price": 999.99,
+        "quantity": 10
+      },
+      {
+        "name": "Mouse",
+        "description": "Wireless mouse",
+        "price": 25.50,
+        "quantity": 50
+      }
+    ]
+  },
+  {
+    "name": "Books",
+    "description": "Various books",
+    "products": [
+      {
+        "name": "Python Programming",
+        "description": "Learn Python from scratch",
+        "price": 39.99,
+        "quantity": 20
+      }
+    ]
+  }
+]
