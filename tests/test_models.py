@@ -214,3 +214,39 @@ class TestLoadFromJson:
                     assert hasattr(product, 'description')
                     assert hasattr(product, 'price')
                     assert hasattr(product, 'quantity')
+    
+    def test_load_from_json_file_not_found(self):
+        """Test that FileNotFoundError is raised for missing file."""
+        with pytest.raises(FileNotFoundError):
+            load_from_json('/nonexistent/path/file.json')
+    
+    def test_load_from_json_invalid_json(self, tmp_path):
+        """Test that JSONDecodeError is raised for invalid JSON."""
+        json_file = tmp_path / "invalid.json"
+        with open(json_file, 'w') as f:
+            f.write("{ invalid json }")
+        
+        with pytest.raises(json.JSONDecodeError):
+            load_from_json(str(json_file))
+    
+    def test_load_from_json_missing_product_fields(self, tmp_path):
+        """Test that KeyError is raised when product fields are missing."""
+        json_data = [
+            {
+                "name": "Test Category",
+                "description": "Test",
+                "products": [
+                    {
+                        "name": "Product",
+                        # Missing description, price, quantity
+                    }
+                ]
+            }
+        ]
+        
+        json_file = tmp_path / "incomplete.json"
+        with open(json_file, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f)
+        
+        with pytest.raises(KeyError):
+            load_from_json(str(json_file))
