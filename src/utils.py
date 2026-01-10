@@ -1,7 +1,8 @@
 import json
 from typing import List
 
-from models import Category, Product
+from src.models import Category, Product
+
 
 def load_from_json(path: str) -> List[Category]:
     """Load categories from JSON file.
