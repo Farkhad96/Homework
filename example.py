@@ -3,7 +3,8 @@
 import os
 import sys
 
-from src.models import Category, Product, load_from_json
+from src.models import Category, Product
+from src.utils import load_from_json
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))

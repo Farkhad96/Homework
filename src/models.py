@@ -49,7 +49,7 @@ class Product:
                     data["price"] = existing_product.price
         else:
             Product.list_of_products.append(cls(data["name"], data["description"], data["price"], data["quantity"]))
-            return cls(data["name"], data["description"], data["price"], data["quantity"])
+        return cls(data["name"], data["description"], data["price"], data["quantity"])
 
     @property
     def price(self) -> Union[float, Decimal]:
@@ -64,11 +64,13 @@ class Product:
             new_price: New price to set (float or Decimal)
         """
         if new_price < self.__price:
-            if input("New price is lower than current price. Are you sure? (y/n): ") != "y":
+            if (
+                input(f"New price {new_price} is lower than current price {self.__price}. Are you sure? (y/n): ")
+                == "y"
+            ):
+                self.__price = new_price
                 if new_price < 0:
                     self.__price = 0
-                else:
-                    self.__price = new_price
 
 
 class Category:
