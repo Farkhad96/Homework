@@ -1,15 +1,17 @@
 """Product and Category models."""
+
 from decimal import Decimal
-from typing import Union, List
-import json
+from typing import List, Union
 
 
 class Product:
     """Product class with name, description, price, and quantity."""
-    
+
+    list_of_products: List["Product"] = []
+
     def __init__(self, name: str, description: str, price: Union[float, Decimal], quantity: int):
         """Initialize Product with all fields.
-        
+
         Args:
             name: Product name
             description: Product description
@@ -18,19 +20,68 @@ class Product:
         """
         self.name = name
         self.description = description
-        self.price = price
+        self.__price = price
         self.quantity = quantity
+        Product.list_of_products.append(self)
+
+    @classmethod
+    def new_product(cls, data: dict) -> "Product":
+        """Create a new Product instance from a dictionary.
+
+        Args:
+            data: Dictionary with product fields (name, description, price, quantity)
+        Returns:
+            Product instance
+        Raises:
+            ValueError: If required fields are missing
+            TypeError: If price or quantity types are incorrect
+        """
+        if not all(key in data for key in ("name", "description", "price", "quantity")):
+            raise ValueError("Missing required product fields in data dictionary")
+        if not isinstance(data["price"], (float, Decimal)):
+            raise TypeError("Price must be a float or Decimal")
+        if not isinstance(data["quantity"], int):
+            raise TypeError("Quantity must be an integer")
+        for existing_product in Product.list_of_products:
+            if existing_product.name == data["name"]:
+                data["quantity"] += existing_product.quantity
+                if existing_product.price > data["price"]:
+                    data["price"] = existing_product.price
+        else:
+            Product.list_of_products.append(cls(data["name"], data["description"], data["price"], data["quantity"]))
+        return cls(data["name"], data["description"], data["price"], data["quantity"])
+
+    @property
+    def price(self) -> Union[float, Decimal]:
+        """Get the product price."""
+        return self.__price
+
+    @price.setter
+    def price(self, new_price: Union[float, Decimal]) -> None:
+        """Set the product price, ensuring it is non-negative.
+
+        Args:
+            new_price: New price to set (float or Decimal)
+        """
+        if new_price < self.__price:
+            if (
+                input(f"New price {new_price} is lower than current price {self.__price}. Are you sure? (y/n): ")
+                == "y"
+            ):
+                self.__price = new_price
+                if new_price < 0:
+                    self.__price = 0
 
 
 class Category:
     """Category class with name, description, and list of products."""
-    
+
     category_count = 0
     product_count = 0
-    
-    def __init__(self, name: str, description: str, products: List['Product']):
+
+    def __init__(self, name: str, description: str, products: List["Product"]):
         """Initialize Category with all fields and update class counters.
-        
+
         Args:
             name: Category name
             description: Category description
@@ -38,67 +89,26 @@ class Category:
         """
         self.name = name
         self.description = description
-        self.products = products
-        
+        self.__products = products
+
         # Update class attributes
         Category.category_count += 1
         Category.product_count += len(products)
 
+    def add_product(self, product: "Product") -> None:
+        """Add a product to the category and update product count.
 
-def load_from_json(path: str) -> List[Category]:
-    """Load categories from JSON file.
-    
-    Args:
-        path: Path to JSON file
-        
-    Returns:
-        List of Category objects
-        
-    Raises:
-        FileNotFoundError: If the file doesn't exist
-        json.JSONDecodeError: If the JSON is malformed
-        KeyError: If required fields are missing in JSON data
-    """
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"JSON file not found: {path}")
-    except json.JSONDecodeError as e:
-        raise json.JSONDecodeError(f"Invalid JSON format in {path}: {e.msg}", e.doc, e.pos)
-    
-    categories = []
-    for category_data in data:
-        try:
-            products = []
-            for product_data in category_data.get('products', []):
-                # Validate required fields
-                required_fields = ['name', 'description', 'price', 'quantity']
-                missing_fields = [field for field in required_fields if field not in product_data]
-                if missing_fields:
-                    raise KeyError(f"Missing required fields in product data: {missing_fields}")
-                
-                product = Product(
-                    name=product_data['name'],
-                    description=product_data['description'],
-                    price=product_data['price'],
-                    quantity=product_data['quantity']
-                )
-                products.append(product)
-            
-            # Validate required fields for category
-            required_fields = ['name', 'description']
-            missing_fields = [field for field in required_fields if field not in category_data]
-            if missing_fields:
-                raise KeyError(f"Missing required fields in category data: {missing_fields}")
-            
-            category = Category(
-                name=category_data['name'],
-                description=category_data['description'],
-                products=products
-            )
-            categories.append(category)
-        except KeyError as e:
-            raise KeyError(f"Error processing category data: {e}")
-    
-    return categories
+        Args:
+            product: Product object to add
+        """
+        self.__products.append(product)
+        Category.product_count += product.quantity
+
+    @property
+    def products(self) -> List["Product"]:
+        """Get the list of products in the category.
+
+        Returns:
+            List of Product objects
+        """
+        return self.__products
