@@ -23,11 +23,21 @@ class Product:
         self.__price = price
         self.quantity = quantity
         Product.list_of_products.append(self)
+
     def __add__(self, other: "Product") -> Union[float, Decimal]:
-            if not isinstance(other, Product):
-                return NotImplemented
-            total_price = self.__price*self.quantity + other.__price*other.quantity
-            return total_price
+        """Add total prices of two Product instances.
+        Args:
+            other: Another Product instance
+        Returns:
+            Sum of total prices (price * quantity) of both products
+        """
+        if type(self) is not type(other):
+            raise TypeError("Both products must be of the same type to add their total prices.")
+        if not isinstance(other, Product):
+            return NotImplemented
+        total_price = self.__price * self.quantity + other.__price * other.quantity
+        return total_price
+
     @classmethod
     def new_product(cls, data: dict) -> "Product":
         """Create a new Product instance from a dictionary.
@@ -59,6 +69,7 @@ class Product:
     def price(self) -> Union[float, Decimal]:
         """Get the product price."""
         return self.__price
+
     def __str__(self):
         return f"{self.name},{self.price} руб.,{self.quantity} шт."
 
@@ -81,6 +92,42 @@ class Product:
             self.__price = new_price
             if new_price < 0:
                 self.__price = 0
+
+
+class Smartphone(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: Union[float, Decimal],
+        quantity: int,
+        efficiency: str,
+        model: str,
+        memory: str,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: Union[float, Decimal],
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
@@ -111,6 +158,8 @@ class Category:
         Args:
             product: Product object to add
         """
+        if not isinstance(product, Product):
+            raise TypeError("Only Product instances can be added to the category.")
         self.__products.append(product)
         Category.product_count += product.quantity
 
@@ -118,21 +167,25 @@ class Category:
     def products(self) -> List["Product"]:
         """Get the list of products in the category."""
         return self.__products
+
     def __str__(self):
         quantity_in_category = 0
         for product in self.__products:
             quantity_in_category += product.quantity
         return f"{self.name}, количество продуктов {quantity_in_category} шт."
 
+
 class ProductsInCategory:
     def __init__(self, category: Category):
         self.name = category.name
         self.description = category.description
         self.__products = category.products
+
     def __iter__(self):
         """Initialize iterator over products in the category."""
         self.current = 0
         return self
+
     def __next__(self):
         """Iterate over products in the category."""
         if self.current < len(self.__products):
@@ -141,6 +194,7 @@ class ProductsInCategory:
             return product
         else:
             raise StopIteration
+
     @staticmethod
     def get_products_in_category(category: Category) -> List[Product]:
         """Get products in a given category.
