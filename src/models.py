@@ -23,7 +23,11 @@ class Product:
         self.__price = price
         self.quantity = quantity
         Product.list_of_products.append(self)
-
+    def __add__(self, other: "Product") -> Union[float, Decimal]:
+            if not isinstance(other, Product):
+                return NotImplemented
+            total_price = self.__price*self.quantity + other.__price*other.quantity
+            return total_price
     @classmethod
     def new_product(cls, data: dict) -> "Product":
         """Create a new Product instance from a dictionary.
@@ -55,6 +59,8 @@ class Product:
     def price(self) -> Union[float, Decimal]:
         """Get the product price."""
         return self.__price
+    def __str__(self):
+        return f"{self.name},{self.price} руб.,{self.quantity} шт."
 
     @price.setter
     def price(self, new_price: Union[float, Decimal]) -> None:
@@ -71,6 +77,10 @@ class Product:
                 self.__price = new_price
                 if new_price < 0:
                     self.__price = 0
+        else:
+            self.__price = new_price
+            if new_price < 0:
+                self.__price = 0
 
 
 class Category:
@@ -106,9 +116,39 @@ class Category:
 
     @property
     def products(self) -> List["Product"]:
-        """Get the list of products in the category.
+        """Get the list of products in the category."""
+        return self.__products
+    def __str__(self):
+        quantity_in_category = 0
+        for product in self.__products:
+            quantity_in_category += product.quantity
+        return f"{self.name}, количество продуктов {quantity_in_category} шт."
+
+class ProductsInCategory:
+    def __init__(self, category: Category):
+        self.name = category.name
+        self.description = category.description
+        self.__products = category.products
+    def __iter__(self):
+        """Initialize iterator over products in the category."""
+        self.current = 0
+        return self
+    def __next__(self):
+        """Iterate over products in the category."""
+        if self.current < len(self.__products):
+            product = self.__products[self.current]
+            self.current += 1
+            return product
+        else:
+            raise StopIteration
+    @staticmethod
+    def get_products_in_category(category: Category) -> List[Product]:
+        """Get products in a given category.
+
+        Args:
+            category: Category object
 
         Returns:
-            List of Product objects
+            List of Product objects in the category
         """
-        return self.__products
+        return category.products

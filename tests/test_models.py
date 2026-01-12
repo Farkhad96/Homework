@@ -110,3 +110,55 @@ class TestCategory:
         assert Category.category_count == initial_cat_count + 1
         assert Category.product_count == initial_prod_count
         assert len(category.products) == 0
+    def test_category_str(self):
+        products = [Product("Product1", "Description1", 10.0, 5)]
+        category = Category("Electronics", "Electronic devices", products)
+        assert str(category) == "Electronics, количество продуктов 5 шт."
+    def test_product_str(self):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+        assert str(product) == "Laptop,999.99 руб.,10 шт."
+    def test_price_setter_with_confirmation(self, monkeypatch):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        # Simulate user input 'y' for confirmation
+        monkeypatch.setattr("builtins.input", lambda _: "y")
+        product.price = 899.99
+        assert product.price == 899.99
+    def test_price_setter_without_confirmation(self, monkeypatch):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        # Simulate user input 'n' for confirmation
+        monkeypatch.setattr("builtins.input", lambda _: "n")
+        product.price = 899.99
+        assert product.price == 999.99
+    def test_price_setter_negative_price(self, monkeypatch):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        # Simulate user input 'y' for confirmation
+        monkeypatch.setattr("builtins.input", lambda _: "y")
+        product.price = -100.00
+        assert product.price == 0
+    def test_price_setter_higher_price(self):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        product.price = 1099.99
+        assert product.price == 1099.99
+    def test_price_setter_equal_price(self):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        product.price = 999.99
+        assert product.price == 999.99
+    def test_price_setter_zero_price(self, monkeypatch):
+        product = Product("Laptop", "High-performance laptop", 999.99, 10)
+
+        # Simulate user input 'y' for confirmation
+        monkeypatch.setattr("builtins.input", lambda _: "y")
+        product.price = 0.00
+        assert product.price == 0.00
+    def test_product_addition(self):
+        product1 = Product("Product1", "Description1", 10.0, 5)
+        product2 = Product("Product2", "Description2", 20.0, 3)
+
+        total_price = product1 + product2
+        assert total_price == 110.0
+
