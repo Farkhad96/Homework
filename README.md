@@ -47,6 +47,70 @@ This project implements Product and Category classes with automatic counting fun
 ### Functions
 - `load_from_json(path: str) -> list[Category]`: loads categories and products from a JSON file
 
+## Quick Start
+
+```bash
+pip install -r requirements.txt
+pytest -q
+```
+
+Minimal run:
+
+```bash
+python main.py
+```
+
+## Project Structure
+
+- `src/models.py` — core domain models (`Product`, `Category`, specialized products, iterator)
+- `src/utils.py` — helpers (JSON loading)
+- `tests/` — pytest suite
+- `main.py` — example script / manual run
+
+## API Cheatsheet (most used)
+
+### Product
+- `Product(name, description, price, quantity)`
+- `Product.new_product(data: dict) -> Product`
+- `product.price = new_price` (may prompt on decrease)
+- `str(product)` → `"Name,price руб.,quantity шт."`
+- `product1 + product2` → total inventory value (same concrete class only)
+
+### Category
+- `Category(name, description, products: list[Product])`
+- `Category.category_count`, `Category.product_count`
+- `category.add_product(product)`
+- `category.products` (list-like)
+- `str(category)` → total *quantity* across items in category
+
+### Iteration
+- `for p in ProductsInCategory(category): ...`
+- `ProductsInCategory.get_products_in_category(category) -> list[Product]`
+
+## Important Notes / Edge Cases
+
+### Price setter behavior
+- If you set a **lower** price, the setter asks for confirmation via `input()`.
+- Any negative price is **clamped to `0`**.
+
+### `Product.__add__` rules
+- Only supported when both operands are the **same concrete class**:
+  - OK: `Product + Product`, `Smartphone + Smartphone`
+  - Error: `Smartphone + Product` (raises `TypeError`)
+- The result is a number: `(price * quantity) + (other.price * other.quantity)`.
+
+### Counters (`Category.category_count`, `Category.product_count`)
+- `category_count` increments per created `Category`.
+- `product_count` counts **Product objects**, not quantities in stock.
+- `Category.__str__` prints **sum of quantities** across all products.
+
+### JSON loading (`load_from_json`)
+- Validates presence of required fields for categories and products.
+- Raises:
+  - `FileNotFoundError` if path is missing
+  - `json.JSONDecodeError` if malformed JSON
+  - `KeyError` if required fields are absent
+
 ## Installation
 
 ```bash
@@ -160,6 +224,11 @@ The `products.json` file should follow this structure:
 ```bash
 pytest -q
 ```
+
+## Development Tips
+
+- If tests fail due to interactive prompts, use `pytest` (the suite already monkeypatches `input()` where needed).
+- Keep an eye on `Product.list_of_products` during tests: it’s global state and is reset in the test setup.
 
 ## Test Coverage
 
