@@ -161,7 +161,7 @@ class Category:
         if not isinstance(product, Product):
             raise TypeError("Only Product instances can be added to the category.")
         self.__products.append(product)
-        Category.product_count += product.quantity
+        Category.product_count += 1
 
     @property
     def products(self) -> List["Product"]:
