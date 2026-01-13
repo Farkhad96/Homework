@@ -1,28 +1,40 @@
 """Product and Category models."""
 
+from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import List, Union
 
 
-class Product:
-    """Product class with name, description, price, and quantity."""
-
-    list_of_products: List["Product"] = []
-
+class BaseProduct(ABC):
     def __init__(self, name: str, description: str, price: Union[float, Decimal], quantity: int):
-        """Initialize Product with all fields.
-
-        Args:
-            name: Product name
-            description: Product description
-            price: Product price (float or Decimal)
-            quantity: Product quantity
-        """
         self.name = name
         self.description = description
-        self.__price = price
+        self._price = price
         self.quantity = quantity
-        Product.list_of_products.append(self)
+
+    @abstractmethod
+    def work(self):
+        pass
+
+    # Single source of truth for __price
+    @property
+    def price(self) -> Union[float, Decimal]:
+        return self._price
+
+    @price.setter
+    def price(self, new_price: Union[float, Decimal]) -> None:
+        if new_price < self._price:
+            if input(f"New price {new_price} is lower than current price {self._price}. Are you sure? (y/n): ") == "y":
+                self._price = new_price if new_price >= 0 else 0
+        else:
+            self._price = new_price if new_price >= 0 else 0
+
+    # Helper for subclasses that need direct access (e.g., __add__)
+    def _get_price_value(self) -> Union[float, Decimal]:
+        return self._price
+
+    def __repr__(self):
+        return f"Product({self.name},{self.description},{self.price},{self.quantity})"
 
     def __add__(self, other: "Product") -> Union[float, Decimal]:
         """Add total prices of two Product instances.
@@ -35,8 +47,34 @@ class Product:
             raise TypeError("Both products must be of the same type to add their total prices.")
         if not isinstance(other, Product):
             return NotImplemented
-        total_price = self.__price * self.quantity + other.__price * other.quantity
+        total_price = self._price * self.quantity + other._price * other.quantity
         return total_price
+
+
+class MixinLog:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(self.__repr__())
+
+
+class Product(BaseProduct, MixinLog):
+    """Product class with name, description, price, and quantity."""
+
+    list_of_products: List["Product"] = []
+
+    def work(self):
+        pass
+
+    def __init__(self, name: str, description: str, price: Union[float, Decimal], quantity: int):
+        """Initialize Product with all fields.
+        Args:
+            name: Product name
+            description: Product description
+            price: Product price (float or Decimal)
+            quantity: Product quantity
+        """
+        super().__init__(name, description, price, quantity)
+        Product.list_of_products.append(self)
 
     @classmethod
     def new_product(cls, data: dict) -> "Product":
@@ -65,33 +103,8 @@ class Product:
             Product.list_of_products.append(cls(data["name"], data["description"], data["price"], data["quantity"]))
         return cls(data["name"], data["description"], data["price"], data["quantity"])
 
-    @property
-    def price(self) -> Union[float, Decimal]:
-        """Get the product price."""
-        return self.__price
-
     def __str__(self):
         return f"{self.name},{self.price} руб.,{self.quantity} шт."
-
-    @price.setter
-    def price(self, new_price: Union[float, Decimal]) -> None:
-        """Set the product price, ensuring it is non-negative.
-
-        Args:
-            new_price: New price to set (float or Decimal)
-        """
-        if new_price < self.__price:
-            if (
-                input(f"New price {new_price} is lower than current price {self.__price}. Are you sure? (y/n): ")
-                == "y"
-            ):
-                self.__price = new_price
-                if new_price < 0:
-                    self.__price = 0
-        else:
-            self.__price = new_price
-            if new_price < 0:
-                self.__price = 0
 
 
 class Smartphone(Product):
@@ -112,6 +125,9 @@ class Smartphone(Product):
         self.memory = memory
         self.color = color
 
+    def work(self):
+        pass
+
 
 class LawnGrass(Product):
     def __init__(
@@ -128,6 +144,9 @@ class LawnGrass(Product):
         self.country = country
         self.germination_period = germination_period
         self.color = color
+
+    def work(self):
+        pass
 
 
 class Category:

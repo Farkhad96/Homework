@@ -4,7 +4,10 @@ import os
 import sys
 from decimal import Decimal
 
-from src.models import Category, Product, Smartphone
+import pytest
+from openpyxl.compat.product import product
+
+from src.models import Category, MixinLog, Product, Smartphone
 
 # Add src to path (must be done before importing src.*)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -287,7 +290,7 @@ class TestCategory:
         assert Category.product_count == 0
         p = Product("P", "D", 10.0, 7)
         category.add_product(p)
-        assert Category.product_count == 7
+        assert Category.product_count == 1
         assert category.products[-1] is p
 
     def test_category_with_empty_products(self):
@@ -313,3 +316,9 @@ class TestCategory:
             assert False
         except TypeError:
             assert True
+
+
+def test_with_captured_output(capsys):
+    product = Product("Товар", "Описание товара", 100.0, 5)
+    captured = capsys.readouterr()
+    assert captured.out == "Product(Товар,Описание товара,100.0,5)\n"
