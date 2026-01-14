@@ -52,12 +52,13 @@ class BaseProduct(ABC):
 
 
 class MixinLog:
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         print(self.__repr__())
 
 
-class Product(BaseProduct, MixinLog):
+class Product(MixinLog, BaseProduct):
     """Product class with name, description, price, and quantity."""
 
     list_of_products: List["Product"] = []
@@ -73,6 +74,9 @@ class Product(BaseProduct, MixinLog):
             price: Product price (float or Decimal)
             quantity: Product quantity
         """
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен.")
+
         super().__init__(name, description, price, quantity)
         Product.list_of_products.append(self)
 
@@ -192,6 +196,21 @@ class Category:
         for product in self.__products:
             quantity_in_category += product.quantity
         return f"{self.name}, количество продуктов {quantity_in_category} шт."
+
+    def middle_price(self) -> Union[float, Decimal]:
+        """Calculate the average price of products in the category.
+
+        Returns:
+            Average price as float or Decimal. Returns 0 if no products.
+        """
+
+        total_price = sum(product.price for product in self.__products)
+        try:
+            average_price = total_price / len(self.__products)
+            return average_price
+        except ZeroDivisionError:
+            print("Попытка деления на ноль")
+            return 0
 
 
 class ProductsInCategory:

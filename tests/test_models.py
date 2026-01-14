@@ -4,9 +4,6 @@ import os
 import sys
 from decimal import Decimal
 
-import pytest
-from openpyxl.compat.product import product
-
 from src.models import Category, MixinLog, Product, Smartphone
 
 # Add src to path (must be done before importing src.*)
@@ -16,7 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 class TestProduct:
     """Tests for Product class."""
 
-    def setup_method(self):
+    @staticmethod
+    def setup_method():
         Product.list_of_products = []
 
     def test_product_init_with_float_price(self):
@@ -105,20 +103,6 @@ class TestProduct:
 
         total_price = product1 + product2
         assert total_price == 110.0
-
-    def test_product_addition_with_zero_quantity(self):
-        product1 = Product("Product1", "Description1", 10.0, 0)
-        product2 = Product("Product2", "Description2", 20.0, 3)
-
-        total_price = product1 + product2
-        assert total_price == 60.0
-
-    def test_product_addition_both_zero_quantity(self):
-        product1 = Product("Product1", "Description1", 10.0, 0)
-        product2 = Product("Product2", "Description2", 20.0, 0)
-
-        total_price = product1 + product2
-        assert total_price == 0.0
 
     def test_product_addition_same_class(self):
         product1 = Smartphone("Product1", "Description1", 15.0, 4, "High", "ModelX", "128GB", "Black")
@@ -241,11 +225,19 @@ class TestProduct:
         except TypeError:
             assert True
 
+    def test_product_with_zero_quantity_raises_value_error(self):
+        try:
+            Product("Defective Product", "Invalid quantity", 1000.0, 0)
+            assert False
+        except ValueError:
+            assert True
+
 
 class TestCategory:
     """Tests for Category class."""
 
-    def setup_method(self):
+    @staticmethod
+    def setup_method():
         Category.category_count = 0
         Category.product_count = 0
         Product.list_of_products = []
@@ -316,6 +308,23 @@ class TestCategory:
             assert False
         except TypeError:
             assert True
+
+    def test_middle_price(self):
+        products = [
+            Product("Product1", "Description1", 10.0, 5),
+            Product("Product2", "Description2", 20.0, 3),
+            Product("Product3", "Description3", 30.0, 2),
+        ]
+        category = Category("Electronics", "Electronic devices", products)
+        average_price = category.middle_price()
+        assert average_price == (10.0 + 20.0 + 30.0) / 3
+
+    def test_middle_price_empty_category(self, capsys):
+        category = Category("Empty", "No products", [])
+        average_price = category.middle_price()
+        captured = capsys.readouterr()
+        assert "Попытка деления на ноль" in captured.out
+        assert average_price == 0
 
 
 def test_with_captured_output(capsys):
